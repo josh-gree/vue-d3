@@ -1,5 +1,5 @@
 <template>
-  <circle cx="500" cy="500" r="250"></circle>
+  <circle cx="50" cy="50" r="10"></circle>
 </template>
 
 <script>
