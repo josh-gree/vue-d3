@@ -41,18 +41,23 @@ var chartData = response.data.flipbooks.rawData;
 
 // Parse the data and split it into series
 var columns = ['Timestamp', 'Previous', 'Current'],
-    offset = 1;
-var c = columns.slice(offset).map(function(id, index) {
+  offset = 1;
+var c = columns.slice(offset).map(function (id, index) {
   return {
     id: id,
-    values: chartData.map(function(d) {
+    values: chartData.map(function (d) {
       return {
-        timestamp: d3.utcParse("%Y-%m-%dT%H:%M:%S")(d[0]).setHours(0,0,0,0),
+        timestamp: d3.utcParse("%Y-%m-%dT%H:%M:%S")(d[0]).setHours(0, 0, 0, 0),
         value: d[index + offset]
       }
     })
   }
 });
+
+// The above just creates some data stored in c that will be used in the viz
+
+// sets up the margin conventions for d3 - https://bl.ocks.org/mbostock/3019563
+// watches for changes to the page so that chart is responsive. Why
 
 // Component: SVG parent and stage
 Vue.component('d3__chart', {
@@ -65,20 +70,20 @@ Vue.component('d3__chart', {
   computed: {
 
     // SVG viewbox
-    viewBox: function() {
+    viewBox: function () {
       var outerWidth = this.layout.width + this.layout.marginLeft + this.layout.marginRight,
-          outerHeight = this.layout.height + this.layout.marginTop + this.layout.marginBottom;
+        outerHeight = this.layout.height + this.layout.marginTop + this.layout.marginBottom;
       return '0 0 ' + outerWidth + ' ' + outerHeight;
     },
 
     // Stage
-    stageStyle: function() {
+    stageStyle: function () {
       return {
         'transform': 'translate(' + this.layout.marginLeft + 'px,' + this.layout.marginTop + 'px)'
       }
     }
   },
-  data: function() {
+  data: function () {
     return {
       scale: {
         x: this.getScaleX(),
@@ -92,22 +97,23 @@ Vue.component('d3__chart', {
   methods: {
 
     // Get x-axis scale
-    getScaleX: function() {
+    getScaleX: function () {
       return d3.scaleTime()
         .range([0, this.layout.width])
-        .domain(d3.extent(chartData, function(d) {
-          return d3.utcParse("%Y-%m-%dT%H:%M:%S")(d[0]).setHours(0,0,0,0)
+        // not sure why not using this. here? If changed everything breaks!
+        .domain(d3.extent(chartData, function (d) {
+          return d3.utcParse("%Y-%m-%dT%H:%M:%S")(d[0]).setHours(0, 0, 0, 0)
         }));
     },
 
     // Get y-axis scale
-    getScaleY: function() {
+    getScaleY: function () {
       return d3.scaleLinear()
         .range([this.layout.height, 0])
         .domain([
           0,
-          d3.max(this.chartData, function(d) {
-            return d3.max(d.values, function(e) {
+          d3.max(this.chartData, function (d) {
+            return d3.max(d.values, function (e) {
               return e.value;
             })
           })
@@ -118,7 +124,7 @@ Vue.component('d3__chart', {
     // Watch for layout changes
     layout: {
       deep: true,
-      handler: function(val, oldVal) {
+      handler: function (val, oldVal) {
         this.scale.x = this.getScaleX();
         this.scale.y = this.getScaleY();
       }
@@ -130,25 +136,25 @@ Vue.component('d3__chart', {
 Vue.component('d3__axis', {
   template: '#d3__axis',
   props: ['axis', 'layout', 'scale'],
-  data: function() {
+  data: function () {
     return {
       classList: ['axis'].concat(this.getAxisClasses())
     }
   },
-  mounted: function() {
+  mounted: function () {
     this.drawAxis();
   },
   computed: {
-    style: function() {
+    style: function () {
       return {
         transform: this.getAxisTransform()
       }
     }
   },
   methods: {
-    
+
     // Return a class list containg the appropriate labels for axes
-    getAxisClasses: function() {
+    getAxisClasses: function () {
       var axis = {
         top: 'x',
         bottom: 'x',
@@ -157,10 +163,10 @@ Vue.component('d3__axis', {
       };
       return [this.axis, axis[this.axis]];
     },
-    
+
     // Draw axis
-    drawAxis: function() {
-      
+    drawAxis: function () {
+
       var $axis = d3.select(this.$refs.axis);
       var scale = this.scale;
       var axisGenerator = {
@@ -169,13 +175,13 @@ Vue.component('d3__axis', {
         bottom: d3.axisBottom(scale.x).tickFormat(d3.timeFormat("%b %d")),
         left: d3.axisLeft(scale.y)
       }
-      
+
       $axis.call(axisGenerator[this.axis]);
     },
-    
+
     // Return necessary axis transformation for proper positioning
-    getAxisTransform: function() {
-      
+    getAxisTransform: function () {
+
       var axisOffset = {
         top: { x: 0, y: 0 },
         right: { x: this.layout.width, y: 0 },
@@ -183,14 +189,14 @@ Vue.component('d3__axis', {
         left: { x: 0, y: 0 }
       };
 
-      return 'translate('+axisOffset[this.axis].x+'px, '+axisOffset[this.axis].y+'px)';
+      return 'translate(' + axisOffset[this.axis].x + 'px, ' + axisOffset[this.axis].y + 'px)';
     }
   },
-   watch: {
+  watch: {
     // Changes to scale means we have to redraw the line!
     scale: {
       deep: true,
-      handler: function(val, oldVal) {
+      handler: function (val, oldVal) {
         this.drawAxis();
       }
     }
@@ -198,6 +204,7 @@ Vue.component('d3__axis', {
 });
 
 // Component: Data series
+// basicly just a container to seperate out functionalty - why does this not need the noop watch like in the scatter component?
 Vue.component('d3__series', {
   template: '#d3__series',
   props: ['layout', 'series-data', 'scale']
@@ -207,35 +214,41 @@ Vue.component('d3__series', {
 Vue.component('d3__line', {
   template: '#d3__line',
   props: ['layout', 'series-data', 'scale'],
-  mounted: function() {
+  mounted: function () {
     this.drawLine();
   },
   methods: {
-    drawLine: function() {
+    drawLine: function () {
 
       // Get scale
       var scale = this.scale;
 
       // Line object
       var line = d3.line()
-        .x(function(d) {
+        .x(function (d) {
           return scale.x(d.timestamp);
         })
-        .y(function(d) {
+        .y(function (d) {
           return scale.y(d.value);
         });
 
       // DOM node for line
       var $line = d3.select(this.$refs.line);
+      // this could be;
+      // $line
+      // .datum(this.seriesData.values.filter(function (d) {
+      //   return typeof d.value !== typeof null;
+      // }))
+      // .attr('d', line);
       $line
-        .data([this.seriesData.values.filter(function(d) {
+        .data([this.seriesData.values.filter(function (d) {
           return typeof d.value !== typeof null;
         })])
         .attr('d', line);
     }
   },
   computed: {
-    style: function() {
+    style: function () {
       return {
         fill: 'none',
         stroke: this.scale.color(this.seriesData.id),
@@ -247,7 +260,7 @@ Vue.component('d3__line', {
     // Changes to scale means we have to redraw the line!
     scale: {
       deep: true,
-      handler: function(val, oldVal) {
+      handler: function (val, oldVal) {
         this.drawLine();
       }
     }
@@ -255,13 +268,14 @@ Vue.component('d3__line', {
 });
 
 // Component: D3 point/scatter
+// basicly just a container to seperate out functionalty
 Vue.component('d3__scatter', {
   template: '#d3__scatter',
   props: ['layout', 'series-data', 'scale'],
   watch: {
     scale: {
       deep: true,
-      handler: function() {}  // Has to be included for nested components watch to fire properly
+      handler: function () { }  // Has to be included for nested components watch to fire properly
     }
   }
 });
@@ -270,30 +284,30 @@ Vue.component('d3__scatter', {
 Vue.component('d3__point', {
   template: '#d3__point',
   props: ['layout', 'point-data', 'scale', 'series-id'],
-  mounted: function() {
+  mounted: function () {
     this.drawPoint();
   },
   methods: {
-    drawPoint: function() {
-      
+    drawPoint: function () {
+
       // Get scales
       var scale = this.scale;
-      
+
       // DOM node for points
       var $point = d3.select(this.$refs.point);
       $point
         .datum(this.pointData)
-        .attr('cx', function(d) {
+        .attr('cx', function (d) {
           return scale.x(d.timestamp);
         })
-        .attr('cy', function(d) {
+        .attr('cy', function (d) {
           return scale.y(d.value);
         })
         .attr('r', 5);
     }
   },
   computed: {
-    style: function() {
+    style: function () {
       return {
         fill: '#fff',
         stroke: this.scale.color(this.seriesId),
@@ -304,7 +318,7 @@ Vue.component('d3__point', {
   watch: {
     scale: {
       deep: true,
-      handler: function(val, oldVal) {
+      handler: function (val, oldVal) {
         this.drawPoint();
       }
     }
@@ -315,36 +329,46 @@ Vue.component('d3__point', {
 Vue.component('d3__area', {
   template: '#d3__area',
   props: ['layout', 'series-data', 'scale'],
-  mounted: function() {
+  mounted: function () {
     this.drawArea();
   },
   methods: {
-    drawArea: function() {
+    drawArea: function () {
       // Get scale
       var scale = this.scale;
 
       // Area object
       var area = d3.area()
-        .x(function(d) {
+        .x(function (d) {
           return scale.x(d.timestamp);
         })
         .y0(scale.y(0))
-        .y1(function(d) {
+        .y1(function (d) {
           return scale.y(d.value);
         });
 
       // DOM node for area
       var $area = d3.select(this.$refs.area);
 
+      // differnce between using .data (in d3__line) and .datum? https://stackoverflow.com/a/41819109, https://stackoverflow.com/a/51946496
+      // So datum binds the data passed to all elements of the selection in this case the single path el. Whereas data binds each element passed to each 
+      // element in selection!? Don't really understand this! Ok seems that can change this to use data if the arg is a list...
+      // can become;
+      // $area
+      // .data([this.seriesData.values.filter(function (d) {
+      //   return typeof d.value !== typeof null;
+      // })])
+      // .attr('d', area);
+
       $area
-        .datum(this.seriesData.values.filter(function(d) {
+        .datum(this.seriesData.values.filter(function (d) {
           return typeof d.value !== typeof null;
         }))
         .attr('d', area);
     }
   },
   computed: {
-    style: function() {
+    style: function () {
       return {
         fill: this.scale.color(this.seriesData.id),
         fillOpacity: 0.25
@@ -355,7 +379,7 @@ Vue.component('d3__area', {
     // Changes to scale means we have to redraw the line!
     scale: {
       deep: true,
-      handler: function(val, oldVal) {
+      handler: function (val, oldVal) {
         this.drawArea();
       }
     }
