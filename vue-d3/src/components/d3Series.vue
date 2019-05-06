@@ -1,9 +1,9 @@
 <template>
   <g>
     <!-- dont think we need the this. here? -->
-    <d3Area></d3Area>
-    <d3Line></d3Line>
-    <d3Scatter></d3Scatter>
+    <d3Area :chartdata="chartdata" :scale="scale"></d3Area>
+    <d3Line :chartdata="chartdata" :scale="scale"></d3Line>
+    <d3Scatter :chartdata="chartdata" :scale="scale" @hover="onHover" @leave="onLeave"></d3Scatter>
   </g>
 </template>
 
@@ -14,6 +14,15 @@ import d3Scatter from "./d3Scatter.vue";
 
 export default {
   name: "d3Series",
-  components: { d3Area, d3Line, d3Scatter }
+  props: ["chartdata", "scale"],
+  components: { d3Area, d3Line, d3Scatter },
+  methods: {
+    onHover(event) {
+      this.$emit("hover", event);
+    },
+    onLeave(event) {
+      this.$emit("leave", event);
+    }
+  }
 };
 </script>
