@@ -9,7 +9,9 @@ Will initaly try to recreate the above as a Vue cli project and then take what I
 # TODO
 
 1. ~~Annotate in a new PR the current code from the codepen ( this doesn't work :-( )~~
+
     ~~- Will add comments to src...~~
+    
 2. ~~Convert codepen to vue cli project~~
 3. Collect things I have learnt in a doc
 4. Recreate the choropleth
